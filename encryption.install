@@ -1,0 +1,67 @@
+<?php
+
+/**
+ * Implements hook_requirements().
+ *
+ * - Checks the encryption key is a base 64 encoded 256 value.
+ * - Tests decryption against a known value.
+ */
+function encryption_requirements($phase) {
+  $requirements = [];
+
+  if ($phase == 'runtime') {
+    /** @var \Drupal\encryption\EncryptionServiceInterface $encryption */
+    $encryption = Drupal::service('encryption');
+    // Check for the encryption_key entry in settings.
+    $encryption_key_raw = \Drupal\Core\Site\Settings::get('encryption_key', FALSE);
+    $key = base64_decode($encryption_key_raw);
+    $key_length = strlen($key);
+
+    // @todo: Add a check for openssl.
+
+    $requirements['encryption'] = [
+      'description' => t('The encryption key must be a base 64 encoded 256 bit (32 byte) value.'),
+      'title' => t('Encryption'),
+    ];
+
+    if (empty($encryption_key_raw) || $key_length !== 32) {
+      $requirements['encryption'] += [
+        'severity' => REQUIREMENT_ERROR,
+        'value' => ($encryption_key_raw === FALSE)
+          ? t('The encryption key was not found.')
+          : t('An encryption key of :length bits was found but a 256 bit key was expected.', [':length' => $key_length * 8]),
+      ];
+    } else {
+      $requirements['encryption'] += [
+        'severity' => REQUIREMENT_OK,
+        'value' => t('The encryption key is OK.'),
+      ];
+
+    }
+
+    // @todo: need to be able to reset the state test data.
+    // Use the state service to get an encrypted representation of a known value.
+    $state = Drupal::state();
+    // Get the last stored encrypted value.
+    $result = $state->get('encryption_test_value', FALSE);
+    // Text used for testing decryption.
+    $test_text = 'simple test value';
+
+    if ($result === FALSE) {
+      // Save an encrypted representation of the test string.
+      $state->set('encryption_test_value', $encryption->encrypt($test_text));
+    } else {
+      // Decrypt the result from the state service.
+      $decrypted_result = $encryption->decrypt($result);
+
+      // Add the warning if everything else is OK.
+      if ($test_text != $decrypted_result && $requirements['encryption']['severity'] == REQUIREMENT_OK) {
+        $requirements['encryption']['severity'] = REQUIREMENT_WARNING;
+        $requirements['encryption']['value'] = t('Unable to properly decrypt the test value. Possible due to a change of the encryption key.');
+      }
+    }
+
+  }
+
+  return $requirements;
+}
