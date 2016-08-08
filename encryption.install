@@ -43,13 +43,13 @@ function encryption_requirements($phase) {
     // Use the state service to get an encrypted representation of a known value.
     $state = Drupal::state();
     // Get the last stored encrypted value.
-    $result = $state->get('encryption_test_value', FALSE);
+    $result = $state->get('encryption.test_value', FALSE);
     // Text used for testing decryption.
     $test_text = 'simple test value';
 
     if ($result === FALSE) {
       // Save an encrypted representation of the test string.
-      $state->set('encryption_test_value', $encryption->encrypt($test_text));
+      $state->set('encryption.test_value', $encryption->encrypt($test_text));
     } else {
       // Decrypt the result from the state service.
       $decrypted_result = $encryption->decrypt($result);
