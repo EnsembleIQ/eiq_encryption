@@ -31,10 +31,14 @@ trait EncryptionTrait {
    *   A Base64 encoded representation of the encrypted value.
    */
   public function encrypt($value) {
-    $key = $this->getEncryptionKey();
-
-    // Uses a hash of the encryption key for the initialization vector.
-    return openssl_encrypt($value, 'AES-256-CFB', $key, FALSE, substr(md5($key), 0, 16));
+    // Get the encryption key.
+    if ($key = $this->getEncryptionKey()) {
+      // Generates a random initialization vector.
+      $iv = random_bytes(16);
+      // Concatenate the initialization vector and the encrypted value.
+      $cypher = base64_encode($iv).'|'.openssl_encrypt($value, 'AES-256-CTR', $key, FALSE, $iv);
+      return hash_hmac('sha256', $cypher, sha1($key)).$cypher;
+    }
   }
 
   /**
@@ -46,8 +50,17 @@ trait EncryptionTrait {
    *   The decrypted value.
    */
   public function decrypt($value) {
-    $key = $this->getEncryptionKey();
-    return openssl_decrypt($value, 'AES-256-CFB', $key, 0, substr(md5($key), 0, 16));
+    // Get the encryption key.
+    if ($key = $this->getEncryptionKey()) {
+      // Get the cypher hash.
+      $hmac = substr($value, 0, 64);
+      // Decode the initialization vector.
+      $iv = base64_decode(substr($value, 64, 24));
+      if ($hmac === hash_hmac('sha256', substr($value, 64), sha1($key))) {
+        // Decrypt to supplied value.
+        return openssl_decrypt(substr($value, 88), 'AES-256-CTR', $key, FALSE, $iv);
+      }
+    }
   }
 
   /**
@@ -57,7 +70,12 @@ trait EncryptionTrait {
    *   The encryption key.
    */
   public function getEncryptionKey() {
-    return base64_decode(Settings::get('encryption_key'));
+    $key = base64_decode(Settings::get('encryption_key'));
+
+    // Make sure the key is the correct size.
+    if (strlen($key) === 32) {
+      return $key;
+    }
   }
 
 }
