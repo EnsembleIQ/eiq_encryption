@@ -5,7 +5,7 @@ namespace Drupal\encryption;
 use Drupal\Core\Site\Settings;
 
 /**
- * Used to encrypt and decrypt text using the 'AES-256-CFB' encryption method
+ * Used to encrypt and decrypt text using the 'AES-256-CTR' encryption method
  * using the openssl library that in comes with php unless omitted during
  * compilation.
  *

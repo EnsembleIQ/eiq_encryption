@@ -3,7 +3,7 @@
 
 This module provides a simple two way encryption solution. There are no module
 dependencies. It uses openssl which is compiled into php (unless explicitly
-omitted) to encrypt/decrypt using AES-256-CFB.
+omitted) to encrypt/decrypt using AES-256-CTR.
 
 
 You can use dependency injection or `\Drupal::service('encryption')` to get the
@@ -58,7 +58,7 @@ class ExampleSettings extends ConfigFormBase {
     parent::submitForm($form, $form_state);
 
     $this->config('example_module.settings')
-      ->set('example_secret', $form_state->getValue('example_secret'))
+      ->set('example_secret', $this->encrypt($form_state->getValue('example_secret')))
       ->save();
   }
 }
