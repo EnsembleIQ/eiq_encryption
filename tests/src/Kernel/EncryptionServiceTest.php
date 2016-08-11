@@ -2,11 +2,13 @@
 
 namespace Drupal\Tests\encryption\Kernel;
 
-
 use Drupal\encryption\EncryptionServiceInterface;
 use Drupal\KernelTests\KernelTestBase;
 use Drupal\Core\Site\Settings;
 
+/**
+ * @group encryption
+ */
 class EncryptionServiceTest extends KernelTestBase {
 
   /**
@@ -16,6 +18,9 @@ class EncryptionServiceTest extends KernelTestBase {
     'encryption',
   ];
 
+  /**
+   * {@inheritdoc}
+   */
   public function setUp() {
     parent::setUp();
 
@@ -25,6 +30,9 @@ class EncryptionServiceTest extends KernelTestBase {
     new Settings($settings + ['encryption_key' => base64_encode(random_bytes(32))]);
   }
 
+  /**
+   * Tests the encryption service.
+   */
   public function testEncryptionService() {
     $super_secret_string = 'Big time secrets!';
 
