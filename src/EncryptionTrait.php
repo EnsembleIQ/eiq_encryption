@@ -34,11 +34,13 @@ trait EncryptionTrait {
     // Get the encryption key.
     if ($key = $this->getEncryptionKey()) {
       // Generates a random initialization vector.
-      $iv = random_bytes(16);
+      $iv = openssl_random_pseudo_bytes(16);
+      // Generate a HMAC key using the initialization vector.
+      $h_key = hash_hmac('sha256', hash('sha256', substr($key, 16), TRUE), sha1($iv, TRUE), TRUE);
       // Concatenate the initialization vector and the encrypted value.
       $cypher = base64_encode($iv).'|'.openssl_encrypt($value, 'AES-256-CTR', $key, FALSE, $iv);
       // Concatenate the format code, hash and cypher.
-      return '01'.hash_hmac('sha256', $cypher, sha1($key)).$cypher;
+      return '01'.hash_hmac('sha256', $cypher, $h_key).$cypher;
     }
   }
 
@@ -57,7 +59,9 @@ trait EncryptionTrait {
       $hmac = substr($value, 2, 64);
       // Decode the initialization vector.
       $iv = base64_decode(substr($value, 66, 24));
-      if ($hmac === hash_hmac('sha256', substr($value, 66), sha1($key))) {
+      // Re generate the HMAC key.
+      $h_key = hash_hmac('sha256', hash('sha256', substr($key, 16), TRUE), sha1($iv, TRUE), TRUE);
+      if ($hmac === hash_hmac('sha256', substr($value, 66), $h_key)) {
         // Decrypt to supplied value.
         return openssl_decrypt(substr($value, 90), 'AES-256-CTR', $key, FALSE, $iv);
       }
