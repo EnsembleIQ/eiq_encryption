@@ -22,6 +22,7 @@ use Drupal\Core\Site\Settings;
  */
 trait EncryptionTrait {
 
+
   /**
    * Encrypt a value using the encryption key from settings.php
    *
@@ -37,7 +38,7 @@ trait EncryptionTrait {
       $iv = random_bytes(16);
       // Concatenate the initialization vector and the encrypted value.
       $cypher = base64_encode($iv).'|'.openssl_encrypt($value, 'AES-256-CTR', $key, FALSE, $iv);
-      return hash_hmac('sha256', $cypher, sha1($key)).$cypher;
+      return '01'.hash_hmac('sha256', $cypher, sha1($key)).$cypher;
     }
   }
 
@@ -53,12 +54,12 @@ trait EncryptionTrait {
     // Get the encryption key.
     if ($key = $this->getEncryptionKey()) {
       // Get the cypher hash.
-      $hmac = substr($value, 0, 64);
+      $hmac = substr($value, 2, 64);
       // Decode the initialization vector.
-      $iv = base64_decode(substr($value, 64, 24));
-      if ($hmac === hash_hmac('sha256', substr($value, 64), sha1($key))) {
+      $iv = base64_decode(substr($value, 66, 24));
+      if ($hmac === hash_hmac('sha256', substr($value, 66), sha1($key))) {
         // Decrypt to supplied value.
-        return openssl_decrypt(substr($value, 88), 'AES-256-CTR', $key, FALSE, $iv);
+        return openssl_decrypt(substr($value, 90), 'AES-256-CTR', $key, FALSE, $iv);
       }
     }
   }
