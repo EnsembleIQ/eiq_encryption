@@ -48,6 +48,7 @@ function encryption_requirements($phase) {
     if ($result === FALSE || $_GET['encryption_reset_test_string'] === '1') {
       // Save an encrypted representation of the test string.
       $state->set('encryption.test_value', $encryption->encrypt($test_text));
+      // Let the user know that the test value has been reset.
       if ($_GET['encryption_reset_test_string'] === '1') {
         $requirements['encryption']['severity'] = REQUIREMENT_WARNING;
         $requirements['encryption']['value'] = t('The encryption test value has been reset <a href="javascript:history.back()">(go back)</a>.');
