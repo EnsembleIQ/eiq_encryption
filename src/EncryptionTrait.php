@@ -39,7 +39,7 @@ trait EncryptionTrait {
       // Generate a HMAC key using the initialization vector as a salt.
       $h_key = hash_hmac('sha256', hash('sha256', substr($key, 16), TRUE), hash('sha256', substr($iv, 8), TRUE), TRUE);
       // Concatenate the initialization vector and the encrypted value.
-      $cypher = '03'.base64_encode($iv).'|'.openssl_encrypt($value, 'AES-256-CTR', $key, FALSE, $iv);
+      $cypher = '03'.base64_encode($iv).openssl_encrypt($value, 'AES-256-CTR', $key, FALSE, $iv);
       // Concatenate the format code, hash and cypher.
       return Crypt::hmacBase64($cypher, $h_key).$cypher;
     }
@@ -64,7 +64,7 @@ trait EncryptionTrait {
       $h_key = hash_hmac('sha256', hash('sha256', substr($key, 16), TRUE), hash('sha256', substr($iv, 8), TRUE), TRUE);
       if (Crypt::hashEquals($hmac, Crypt::hmacBase64(substr($value, 43), $h_key))) {
         // Decrypt to supplied value.
-        return openssl_decrypt(substr($value, 69), 'AES-256-CTR', $key, FALSE, $iv);
+        return openssl_decrypt(substr($value, 68), 'AES-256-CTR', $key, FALSE, $iv);
       }
     }
   }
