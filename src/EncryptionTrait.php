@@ -55,7 +55,7 @@ trait EncryptionTrait {
    */
   public function decrypt($value) {
     // Get the encryption key.
-    if ($key = $this->getEncryptionKey()) {
+    if (!empty($value) && $key = $this->getEncryptionKey()) {
       // Get the cypher hash.
       $hmac = substr($value, 2, 43);
       // Decode the initialization vector.

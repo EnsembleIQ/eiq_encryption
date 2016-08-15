@@ -51,5 +51,9 @@ class EncryptionServiceTest extends KernelTestBase {
 
     // Make sure the value get's encrypted properly.
     self::assertEquals($super_secret_string, $decrypted_value);
+
+    // Test decryption of a null value.
+    $null_result = $encryption_service->decrypt(null);
+    self::assertNull($null_result);
   }
 }
