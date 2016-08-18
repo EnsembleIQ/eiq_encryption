@@ -28,10 +28,13 @@ trait EncryptionTrait {
    *
    * @param $value
    *   The value tobe encrypted.
+   * @param bool $raw_output
+   *   Should be set to TRUE if a raw output value is required. Otherwise, a
+   *   url safe base64 encoded encoded string will be returned.
    * @return string
    *   A Base64 encoded representation of the encrypted value.
    */
-  public function encrypt($value) {
+  public function encrypt($value, $raw_output = FALSE) {
     // Get the encryption key.
     if ($key = $this->getEncryptionKey()) {
       // Generates a random initialization vector.
@@ -39,32 +42,39 @@ trait EncryptionTrait {
       // Generate a HMAC key using the initialization vector as a salt.
       $h_key = hash_hmac('sha256', hash('sha256', substr($key, 16), TRUE), hash('sha256', substr($iv, 8), TRUE), TRUE);
       // Concatenate the initialization vector and the encrypted value.
-      $cypher = '03'.base64_encode($iv).openssl_encrypt($value, 'AES-256-CTR', $key, FALSE, $iv);
-      // Concatenate the format code, hash and cypher.
-      return Crypt::hmacBase64($cypher, $h_key).$cypher;
+      $cypher = '03'.$iv.openssl_encrypt($value, 'AES-256-CTR', $key, TRUE, $iv);
+      // encode and concatenate the hmac, format code and cypher.
+      $message = hash_hmac('sha256', $cypher, $h_key, TRUE) . $cypher;
+      // Modify the message so it's safe to use in URLs.
+      return $raw_output ? $message : str_replace(['+', '/', '='], ['-', '_', ''], base64_encode($message));
     }
   }
 
   /**
    * Decrypt a value using the encryption key from settings.php.
    *
-   * @param $value
-   *   A Base64 encoded representation of an encrypted string.
+   * @param string $value
+   *   An encrypted string.
+   * @param bool $raw_input
+   *   Should be set to TRUE if the input value is not a base64 encoded/url safe
+   *   string. (Defaults to FALSE)
    * @return string
    *   The decrypted value.
    */
-  public function decrypt($value) {
+  public function decrypt($value, $raw_input = FALSE) {
     // Get the encryption key.
     if ($key = $this->getEncryptionKey()) {
+      // Reverse the urls-safe replacement and decode.
+      $message = $raw_input ? $value : base64_decode(str_replace(['-', '_', ''], ['+', '/', '='], $value));
       // Get the cypher hash.
-      $hmac = substr($value, 0, 43);
+      $hmac = substr($message, 0, 32);
       // Decode the initialization vector.
-      $iv = base64_decode(substr($value, 45, 24));
+      $iv = substr($message, 34, 16);
       // Re generate the HMAC key.
       $h_key = hash_hmac('sha256', hash('sha256', substr($key, 16), TRUE), hash('sha256', substr($iv, 8), TRUE), TRUE);
-      if (Crypt::hashEquals($hmac, Crypt::hmacBase64(substr($value, 43), $h_key))) {
+      if (Crypt::hashEquals($hmac, hash_hmac('sha256', substr($message, 32), $h_key, TRUE))) {
         // Decrypt to supplied value.
-        return openssl_decrypt(substr($value, 68), 'AES-256-CTR', $key, FALSE, $iv);
+        return openssl_decrypt(substr($message, 50), 'AES-256-CTR', $key, TRUE, $iv);
       }
     }
   }
