@@ -72,7 +72,7 @@ trait EncryptionTrait {
    */
   public function decrypt($value, $raw_input = FALSE) {
     // Get the encryption key.
-    if ($key = $this->getEncryptionKey()) {
+    if (!empty($value) && $key = $this->getEncryptionKey()) {
       // Reverse the urls-safe replacement and decode.
       $message = $raw_input ? $value : base64_decode(str_replace(['-', '_'], ['+', '/'], $value));
       // Get the cypher hash.
