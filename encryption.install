@@ -1,5 +1,7 @@
 <?php
 
+use Drupal\Core\Site\Settings;
+
 /**
  * Implements hook_requirements().
  *
@@ -13,7 +15,7 @@ function encryption_requirements($phase) {
     /** @var \Drupal\encryption\EncryptionServiceInterface $encryption */
     $encryption = Drupal::service('encryption');
     // Check for the encryption_key entry in settings.
-    $encryption_key_raw = \Drupal\Core\Site\Settings::get('encryption_key', FALSE);
+    $encryption_key_raw = Settings::get('encryption_key', FALSE);
     $key = base64_decode($encryption_key_raw);
     $key_length = strlen($key);
 
@@ -27,7 +29,7 @@ function encryption_requirements($phase) {
         'description' => t('The encryption key must be a base 64 encoded 256 bit (32 byte) value.'),
         'value' => ($encryption_key_raw === FALSE)
           ? t('The encryption key was not found.')
-          : t('An encryption key of :length bits was found but a 256 bit key was expected.', [':length' => $key_length * 8]),
+          : t('An encryption key of :length bits was found but a 256 bit key was expected.', [ ':length' => $key_length * 8 ]),
       ];
     } else {
       $requirements['encryption'] += [
@@ -37,7 +39,7 @@ function encryption_requirements($phase) {
 
     }
 
-    // Use the state service to get an encrypted representation of a known value.
+    // Use the state service to get an encrypted version of a test string.
     $state = Drupal::state();
 
     // Get the last stored encrypted value.
