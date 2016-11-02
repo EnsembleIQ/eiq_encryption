@@ -47,11 +47,13 @@ function encryption_requirements($phase) {
     // Text used for testing decryption.
     $test_text = 'simple test value';
 
-    if ($result === FALSE || $_GET['encryption_reset_test_string'] === '1') {
+    $reset = (isset($_GET['encryption_reset_test_string']) && $_GET['encryption_reset_test_string'] === '1');
+
+    if ($result === FALSE || $reset) {
       // Save an encrypted representation of the test string.
       $state->set('encryption.test_value', $encryption->encrypt($test_text));
       // Let the user know that the test value has been reset.
-      if ($_GET['encryption_reset_test_string'] === '1') {
+      if ($reset) {
         $requirements['encryption']['severity'] = REQUIREMENT_WARNING;
         $requirements['encryption']['value'] = t('The encryption test value has been reset <a href="javascript:history.back()">(go back)</a>.');
       }
