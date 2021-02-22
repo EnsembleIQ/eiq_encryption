@@ -10,5 +10,9 @@
     "issues": "https://www.drupal.org/project/issues/encryption",
     "source": "http://cgit.drupalcode.org/encryption"
   },
-  "require": { }
+  "require": {
+      "php": ">= 7",
+      "ext-openssl": "*",
+      "drupal/core": "^8 || ^9"
+  }
 }

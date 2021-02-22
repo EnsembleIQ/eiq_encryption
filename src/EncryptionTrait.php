@@ -42,7 +42,7 @@ trait EncryptionTrait {
     // Get the encryption key.
     if ($key = $this->getEncryptionKey()) {
       // Generates a random initialization vector.
-      $iv = Crypt::randomBytes(16);
+      $iv = random_bytes(16);
       // Generate a HMAC key using the initialization vector as a salt.
       $h_key = hash_hmac('sha256', hash('sha256', substr($key, 16), TRUE), hash('sha256', substr($iv, 8), TRUE), TRUE);
       // Concatenate the initialization vector and the encrypted value.
@@ -81,7 +81,7 @@ trait EncryptionTrait {
       $iv = substr($message, 34, 16);
       // Re generate the HMAC key.
       $h_key = hash_hmac('sha256', hash('sha256', substr($key, 16), TRUE), hash('sha256', substr($iv, 8), TRUE), TRUE);
-      if (Crypt::hashEquals($hmac, hash_hmac('sha256', substr($message, 32), $h_key, TRUE))) {
+      if (hash_equals($hmac, hash_hmac('sha256', substr($message, 32), $h_key, TRUE))) {
         // Decrypt to supplied value.
         return openssl_decrypt(substr($message, 50), 'AES-256-CTR', $key, TRUE, $iv);
       }
